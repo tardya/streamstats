@@ -1,0 +1,22 @@
+{
+    "total_events": 5,
+    "skipped_lines": 0,
+    "first_timestamp": "2026-03-30T11:00:00",
+    "last_timestamp": "2026-03-30T11:04:00",
+    "levels": {
+        "INFO": 2,
+        "WARNING": 1,
+        "ERROR": 1,
+        "CRITICAL": 1
+    },
+    "sources": {
+        "auth_service": 1,
+        "worker": 2,
+        "database": 1,
+        "security": 1
+    },
+    "top_errors": {
+        "database": 1,
+        "security": 1
+    }
+}
