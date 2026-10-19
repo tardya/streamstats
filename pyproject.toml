@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "my_project"
+name = "streamstats"
 version = "1.0.0"
 description = "smth do"
 authors = ["Кира Лейченко"]
 
 
 [tool.poetry.dependencies]
-python = "~3.13"
+python = ">=3.13"
 
 pydantic = "^2.12.5"
 pytest = "^8.3.5"

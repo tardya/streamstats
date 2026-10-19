@@ -1,38 +1,40 @@
 import csv
 import json
-from .errors import UnsupportedFormat
 
+from collections.abc import Callable
+from collections.abc import Iterator
+from typing import Any
 
-def prs_csv(file):
-    """генератор для CSV"""
-    first_line = file.readline()
-    file.seek(0)
-    if first_line.count(';') > first_line.count(','):
-        delimiter1 = ';'
-    else:
-        delimiter1 = ','
-    reader = csv.DictReader(file, delimiter = delimiter1)
-    for num, row in enumerate(reader, start=2):
-        yield num, row
+from .errors import StreamStatsError
 
-def prs_jsonl(file):
-    """генератор для JSONL"""
-    for num, line in enumerate(file, start=1):
+PARSER_REGISTRY: dict[str, Callable] = {}
+
+def register_parser(format_name: str):
+    """Декоратор для регистрации функций-парсеров."""
+    def decorator(func):
+        PARSER_REGISTRY[format_name] = func
+        return func
+    return decorator
+
+@register_parser("csv")
+def prs_csv(file_obj) -> Iterator[tuple[int, dict[str, Any]]]:
+    reader = csv.DictReader(file_obj)
+    yield from enumerate(reader, start=2)
+
+@register_parser("jsonl")
+def prs_jsonl(file_obj) -> Iterator[tuple[int, dict[str, Any]]]:
+    for i, line in enumerate(file_obj, start=1):
         line = line.strip()
         if not line:
             continue
         try:
             row = json.loads(line)
-            yield num, row
-        except json.JSONDecodeError:
-            yield num, {}
+            yield i, row
+        except json.JSONDecodeError as e:
+            raise StreamStatsError(f"Ошибка JSON: {e}")
 
-def get_prs(format_name):
-    """возвращает подходящую по формату функцию"""
-    registry = {
-        "csv": prs_csv,
-        "jsonl": prs_jsonl
-    }
-    if format_name not in registry:
-        raise UnsupportedFormat(f"неподдерживаемый формат: {format_name}")
-    return registry[format_name]
+def get_prs(format_name: str) -> Callable:
+    """Получает зарегистрированный парсер по имени формата."""
+    if format_name not in PARSER_REGISTRY:
+        raise StreamStatsError(f"Неподдерживаемый формат: {format_name}. Доступные: {list(PARSER_REGISTRY.keys())}")
+    return PARSER_REGISTRY[format_name]

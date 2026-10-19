@@ -2,7 +2,10 @@ import io
 import json
 import subprocess
 import sys
-from src.streamstats.parsers import prs_csv, prs_jsonl
+
+from src.streamstats.parsers import prs_csv
+from src.streamstats.parsers import prs_jsonl
+
 
 def test_prs_csv():
     csv_data = "timestamp,level,source,message\n2008-08-01T12:00:00,INFO,App,маевец"
@@ -28,7 +31,7 @@ def test_empty_file():
 def run_cli(*args):
     """функция для эмуляции ввода команд в терминал"""
     cmd = [sys.executable, "-m", "src.streamstats", "analyze"] + list(args)
-    return subprocess.run(cmd, capture_output=True, text=True)
+    return subprocess.run(cmd, capture_output=True, text=True, check=False)
 
 
 def test_cli_integration(tmp_path):
@@ -41,7 +44,7 @@ def test_cli_integration(tmp_path):
     out_json = tmp_path / "report.json"
     res_strict = run_cli(str(file1), str(file2), "--format", "csv", "--output", str(out_json))
     assert res_strict.returncode == 2
-    assert "Ошибка в файле 2" in res_strict.stdout
+    assert "Ошибка в файле 2" in res_strict.stderr
     res_skip = run_cli(str(file1), str(file2), "--format", "csv", "--output", str(out_json), "--skip-invalid")
     assert res_skip.returncode == 0
     assert "WARNING: Пропущена строка" in res_skip.stderr

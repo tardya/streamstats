@@ -1,40 +1,40 @@
-import json
 import csv
-import os
+import json
 
-def save_report(stats, out_path):
-    if stats.first_ts:
-        first_str = stats.first_ts.isoformat()
-    else:
-        first_str = None
-    if stats.last_ts:
-        last_str = stats.last_ts.isoformat()
-    else:
-        last_str = None
-    data = {
-        "total_events": stats.total,
-        "skipped_lines": stats.skipped,
+from .analysis import Stats
+
+
+def save_report(stats: Stats, filepath: str):
+    """Сохраняет сводную статистику в формате JSON."""
+    report_data = {
+        "total_events": stats.total_events,
+        "skipped_lines": stats.skipped_lines,
+        "first_timestamp": stats.first_timestamp,
+        "last_timestamp": stats.last_timestamp,
         "levels": stats.levels,
         "sources": stats.sources,
-        "top_errors": dict(stats.get_top_errors()),
-        "first_timestamp": first_str,
-        "last_timestamp": last_str
+        "top_errors": stats.get_top_errors()
     }
-    ext = os.path.splitext(out_path)[1]
-    if ext.lower() == '.csv':
-        with open(out_path, 'w', encoding='utf-8', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(["метрика", "значение"])
-            writer.writerow(["общее число событий", data["total_events"]])
-            writer.writerow(["пропущенные строки", data["skipped_lines"]])
-            writer.writerow(["первая временная метка", data["first_timestamp"]])
-            writer.writerow(["последняя временная метка", data["last_timestamp"]])
-            for level, count in data["levels"].items():
-                writer.writerow([f"уровень {level}", count])
-            for source, count in data["sources"].items():
-                writer.writerow([f"источник {source}", count])
-            for err_source, count in data["top_errors"].items():
-                writer.writerow([f"частая ошибка {err_source}", count])
-    else:
-        with open(out_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
+    with open(filepath, 'w', encoding='utf-8') as f:
+        json.dump(report_data, f, ensure_ascii=False, indent=4)
+
+
+def save_report_csv(stats: Stats, filepath: str):
+    """Сохраняет сводную статистику в формате CSV без дублирования расчетов."""
+    with open(filepath, 'w', encoding='utf-8', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["Метрика", "Значение"])
+        writer.writerow(["Всего событий", stats.total_events])
+        writer.writerow(["Пропущено строк", stats.skipped_lines])
+        writer.writerow(["Первое событие", stats.first_timestamp or "N/A"])
+        writer.writerow(["Последнее событие", stats.last_timestamp or "N/A"])
+        writer.writerow([])
+
+        writer.writerow(["Статистика по уровням", ""])
+        for lvl, count in stats.levels.items():
+            writer.writerow([lvl, count])
+
+        writer.writerow([])
+        writer.writerow(["Топ-5 источников ошибок", ""])
+        for source, count in stats.get_top_errors().items():
+            writer.writerow([source, count])

@@ -1,38 +1,38 @@
+from collections import Counter
+
+from .models import Event
+
+
 class Stats:
+    """Класс для агрегации статистики по потоку событий."""
+
     def __init__(self):
-        self.total = 0
-        self.levels = {}
-        self.sources = {}
-        self.err_src = {}
-        self.first_ts = None
-        self.last_ts = None
-        self.skipped = 0
-    def add_event(self, ev):
-        self.total += 1
+        self.total_events: int = 0
+        self.skipped_lines: int = 0
+        self.first_timestamp: str | None = None
+        self.last_timestamp: str | None = None
+        self.levels: Counter = Counter()
+        self.sources: Counter = Counter()
+        self._error_sources: Counter = Counter()
 
-        if ev.level not in self.levels:
-            self.levels[ev.level] = 0
-        self.levels[ev.level] += 1
+    def add_event(self, event: Event) -> None:
+        """Добавляет валидное событие в общую статистику."""
+        self.total_events += 1
+        self.levels[event.level] += 1
+        self.sources[event.source] += 1
 
-        if ev.source not in self.sources:
-            self.sources[ev.source] = 0
-        self.sources[ev.source] += 1
+        if event.level in {"ERROR", "CRITICAL"}:
+            self._error_sources[event.source] += 1
 
-        if ev.level in ["ERROR", "CRITICAL"]:
-            if ev.source not in self.err_src:
-                self.err_src[ev.source] = 0
-            self.err_src[ev.source] += 1
+        if self.first_timestamp is None or event.timestamp < self.first_timestamp:
+            self.first_timestamp = event.timestamp
+        if self.last_timestamp is None or event.timestamp > self.last_timestamp:
+            self.last_timestamp = event.timestamp
 
-        if self.first_ts is None or ev.timestamp < self.first_ts:
-            self.first_ts = ev.timestamp
+    def add_skipped(self) -> None:
+        """Увеличивает счетчик пропущенных ошибочных строк."""
+        self.skipped_lines += 1
 
-        if self.last_ts is None or ev.timestamp > self.last_ts:
-            self.last_ts = ev.timestamp
-
-    def add_skipped(self):
-        self.skipped += 1
-
-    def get_top_errors(self):
-        items = list(self.err_src.items())
-        items.sort(key=lambda x: x[1], reverse=True)
-        return items[:5]
+    def get_top_errors(self) -> dict[str, int]:
+        """Возвращает топ-5 источников с наибольшим числом ошибок (ERROR, CRITICAL)."""
+        return dict(self._error_sources.most_common(5))

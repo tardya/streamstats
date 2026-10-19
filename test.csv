@@ -1,5 +1,0 @@
-timestamp,level,source,message
-2026-10-18T10:00:00,INFO,App,Запуск программы
-2026-10-18T10:05:00,ERROR,Database,Ошибка базы данных
-2026-10-18T10:10:00,BAD_LEVEL,App,Это сломанная строка
-2026-10-18T10:15:00,CRITICAL,Database,Полный отказ
