@@ -1,21 +1,21 @@
-"""Исключения пакета streamstats."""
+"""Исключения пакета streamstats"""
 
 
 class StreamStatsError(Exception):
-    """Базовый класс для всех ошибок пакета."""
+    """Базовый класс для всех ошибок пакета"""
 
 
 class UnsupportedFormat(StreamStatsError):
-    """Неподдерживаемый формат входного файла."""
+    """Неподдерживаемый формат входного файла"""
 
 
 class InvalidEvent(StreamStatsError):
-    """Неверное событие: нет поля, плохой уровень, пустой источник."""
+    """Неверное событие"""
 
 
 class InvalidTimestamp(StreamStatsError):
-    """Неверная временная метка (не ISO 8601)."""
+    """Неверная временная метка (не ISO 8601)"""
 
 
 class CLIConfigError(StreamStatsError):
-    """Ошибка конфигурации CLI: например, входной файл не найден."""
+    """Ошибка конфигурации CLI"""
